@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import chromadb
+from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
 # Project paths (relative to this file's directory = project root)
@@ -148,7 +149,10 @@ def get_or_create_collection(
     without re-embedding the corpus on every app start.
     """
     persist_dir.mkdir(parents=True, exist_ok=True)
-    client = chromadb.PersistentClient(path=str(persist_dir))
+    client = chromadb.PersistentClient(
+        path=str(persist_dir),
+        settings=Settings(anonymized_telemetry=False),
+    )
     embedding_fn = get_embedding_function()
     return client.get_or_create_collection(
         name=collection_name,
@@ -180,7 +184,10 @@ def ingest_corpus(
 
     # Recreate collection for a clean ingest each run
     persist_dir.mkdir(parents=True, exist_ok=True)
-    client = chromadb.PersistentClient(path=str(persist_dir))
+    client = chromadb.PersistentClient(
+        path=str(persist_dir),
+        settings=Settings(anonymized_telemetry=False),
+    )
     try:
         client.delete_collection(COLLECTION_NAME)
     except Exception:

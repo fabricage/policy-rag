@@ -88,6 +88,7 @@ pytest -q
 ├── ingest.py                   # chunk, embed, store in Chroma
 ├── evaluate.py                 # citation / groundedness / latency metrics
 ├── requirements.txt
+├── pytest.ini                  # adds project root to PYTHONPATH for tests
 ├── README.md
 ├── design-and-evaluation.md
 ├── ai-tooling.md
