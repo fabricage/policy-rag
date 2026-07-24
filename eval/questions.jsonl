@@ -1,0 +1,20 @@
+{"question": "How many PTO days per month do Meridian employees accrue in years 1–2?", "expected_source": "pto-policy.md", "gold_answer": "1.25 days per month (15 days per year)."}
+{"question": "What is the maximum number of unused PTO days that can be carried over into the next calendar year?", "expected_source": "pto-policy.md", "gold_answer": "5 days; excess is forfeited on December 31."}
+{"question": "How many business days in advance must employees request PTO for absences of 3 or more consecutive business days?", "expected_source": "pto-policy.md", "gold_answer": "At least 10 business days in advance."}
+{"question": "What is the minimum password length required by Meridian Software's security policy?", "expected_source": "security-policy.md", "gold_answer": "14 characters, including upper, lower, number, and symbol."}
+{"question": "Within how many hours must a lost or stolen device be reported?", "expected_source": "security-policy.md", "gold_answer": "Within 1 hour to security@meridian-software.example and IT Service Desk."}
+{"question": "What is the domestic meal per-diem amount for Meridian Software business travel?", "expected_source": "expense-policy.md", "gold_answer": "$75 per day."}
+{"question": "Which role must approve expenses above $2,500?", "expected_source": "expense-policy.md", "gold_answer": "VP of Finance."}
+{"question": "Within how many calendar days must expense reports be submitted after the expense date?", "expected_source": "expense-policy.md", "gold_answer": "Within 14 calendar days."}
+{"question": "What are Meridian Software's core collaboration hours for remote and hybrid employees?", "expected_source": "remote-work-policy.md", "gold_answer": "10:00 AM – 3:00 PM Pacific Time, Monday–Friday."}
+{"question": "What is the one-time home office equipment stipend for approved remote or hybrid employees?", "expected_source": "remote-work-policy.md", "gold_answer": "$750, to be used within 60 days of approval."}
+{"question": "How many floating holidays does Meridian Software provide each calendar year?", "expected_source": "holiday-schedule.md", "gold_answer": "2 floating holidays per year, with no carryover past December 31."}
+{"question": "Is Juneteenth a paid company holiday at Meridian Software?", "expected_source": "holiday-schedule.md", "gold_answer": "Yes, Juneteenth is one of the 11 fixed paid company holidays."}
+{"question": "What is the anonymous Ethics Hotline phone number for reporting conduct concerns?", "expected_source": "code-of-conduct.md", "gold_answer": "1-800-555-0199."}
+{"question": "Within how many business days does People Operations aim to complete a code-of-conduct investigation?", "expected_source": "code-of-conduct.md", "gold_answer": "Within 10 business days (acknowledgment within 2 business days)."}
+{"question": "How long is the probation period for new Meridian Software employees?", "expected_source": "onboarding-policy.md", "gold_answer": "90 calendar days from the start date."}
+{"question": "By which day must new hires complete security awareness training during onboarding?", "expected_source": "onboarding-policy.md", "gold_answer": "By Day 5 of employment."}
+{"question": "What are the four data classification levels at Meridian Software?", "expected_source": "data-privacy-policy.md", "gold_answer": "Public, Internal, Confidential, and Restricted."}
+{"question": "How long is customer data retained after a contract ends under the data privacy policy?", "expected_source": "data-privacy-policy.md", "gold_answer": "7 years after contract end, unless a shorter period is required by contract or law."}
+{"question": "What is the recipe for Meridian Software's secret cafeteria chili?", "expected_source": "NONE", "gold_answer": "Refusal — out of corpus."}
+{"question": "Who won the 2018 FIFA World Cup?", "expected_source": "NONE", "gold_answer": "Refusal — out of corpus."}
