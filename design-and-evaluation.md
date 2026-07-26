@@ -22,9 +22,9 @@ Each retrieved chunk is labeled as `[Source: <filename> | Section: <heading>]`. 
 
 Chroma provides zero-infrastructure local persistence: ingest once, query many times, no Docker or managed vector DB. The collection is named `policies` and stores metadata `{source, section, chunk_index}` per chunk for citation rendering.
 
-### Groq (`llama-3.1-8b-instant`)
+### LLM: Anthropic Claude Haiku (primary), optional Groq
 
-Groq's free tier and low latency fit an interactive demo. The model is called only after retrieval (and only when the similarity guardrail passes), so most of the pipeline remains local and inspectable. The API key is read from `GROQ_API_KEY` via `.env` and is never hardcoded.
+Generation uses Anthropic `claude-haiku-4-5` by default via `ANTHROPIC_API_KEY` (good fit for a Render presentation demo). Groq `llama-3.1-8b-instant` remains an optional fallback when `GROQ_API_KEY` is set (`LLM_PROVIDER=groq`). The model is called only after retrieval (and only when the similarity guardrail passes), so most of the pipeline remains local and inspectable. API keys are loaded from `.env` / Render env vars and are never hardcoded.
 
 ### Similarity guardrail threshold = 0.25
 
@@ -39,7 +39,7 @@ The threshold (~0.25) was chosen as a conservative floor: in-corpus policy quest
 `evaluate.py` runs all 20 lines in `eval/questions.jsonl` through `answer_question()` and reports three metrics:
 
 1. **Citation accuracy** — percentage of questions where `expected_source` appears in returned citations. For `expected_source: "NONE"`, success means the refusal message was returned (empty citations).
-2. **Groundedness (LLM-as-judge)** — for answered (non-refusal) questions, Groq is asked for a strict YES/NO: whether every claim in the answer is fully supported by the retrieved snippets. Report percentage YES.
+2. **Groundedness (LLM-as-judge)** — for answered (non-refusal) questions, the configured LLM is asked for a strict YES/NO: whether every claim in the answer is fully supported by the retrieved snippets. Report percentage YES.
 3. **Latency** — wall-clock `latency_ms` from the full RAG pipeline; report p50 and p95 across all queries.
 
 Results are written to `eval/results.md` as a summary table plus a per-question breakdown.

@@ -1,6 +1,6 @@
 # Meridian Software Policy RAG
 
-A Flask web app that answers questions about Meridian Software Inc. company policies using Retrieval-Augmented Generation (RAG). Policy documents are chunked, embedded locally with sentence-transformers, stored in Chroma, and retrieved at query time so Groq's LLM can answer with source citations. No LangChain — retrieval, prompting, and API calls are implemented directly in plain Python.
+A Flask web app that answers questions about Meridian Software Inc. company policies using Retrieval-Augmented Generation (RAG). Policy documents are chunked, embedded locally with sentence-transformers, stored in Chroma, and retrieved at query time so an LLM (Anthropic Claude by default, optional Groq) can answer with source citations. No LangChain — retrieval, prompting, and API calls are implemented directly in plain Python.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ A Flask web app that answers questions about Meridian Software Inc. company poli
   retrieve top-k=4  ---- similarity guardrail (~0.25)
       |
       v
-  prompt + Groq (llama-3.1-8b-instant)
+  prompt + LLM (Anthropic Claude Haiku, or optional Groq)
       |
       v
   cited answer (source + section + snippets)
@@ -26,7 +26,8 @@ A Flask web app that answers questions about Meridian Software Inc. company poli
 ## Prerequisites
 
 - Python 3.11
-- A Groq API key ([console.groq.com](https://console.groq.com/))
+- An Anthropic API key ([console.anthropic.com](https://console.anthropic.com/))  
+  *(Optional alternative: a Groq API key from [console.groq.com](https://console.groq.com/) — this is a separate product, not Cursor.)*
 
 ## Setup
 
@@ -36,7 +37,8 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Create .env in the project root (never commit this file)
-echo "GROQ_API_KEY=your_key_here" > .env
+echo "ANTHROPIC_API_KEY=your_key_here" > .env
+# Optional: echo "LLM_PROVIDER=anthropic" >> .env
 ```
 
 ## How to run
@@ -84,11 +86,11 @@ pytest -q
 ```
 .
 ├── app.py                      # Flask UI + /chat + /health
-├── rag.py                      # retrieve → guardrail → Groq → citations
+├── rag.py                      # retrieve → guardrail → LLM → citations
 ├── ingest.py                   # chunk, embed, store in Chroma
 ├── evaluate.py                 # citation / groundedness / latency metrics
 ├── requirements.txt
-├── render.yaml                 # Render Blueprint (web service + GROQ_API_KEY)
+├── render.yaml                 # Render Blueprint (web service + ANTHROPIC_API_KEY)
 ├── pytest.ini                  # adds project root to PYTHONPATH for tests
 ├── README.md
 ├── design-and-evaluation.md
@@ -109,7 +111,7 @@ This repo includes a Render Blueprint at `render.yaml`.
 1. Merge this branch to `main` (if it is not already).
 2. Open [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.
 3. Connect the `fabricage/policy-rag` GitHub repo (branch `main`).
-4. When prompted, paste your **GROQ_API_KEY** (marked `sync: false` in the blueprint).
+4. When prompted, paste your **ANTHROPIC_API_KEY** (marked `sync: false` in the blueprint).
 5. Apply the Blueprint and wait for the first deploy.
    - Build runs `pip install` then `python ingest.py` (embeds corpus into `chroma_db`).
    - Start runs `gunicorn` on `$PORT` with health checks at `/health`.
@@ -119,7 +121,8 @@ If the free instance runs out of memory while loading `sentence-transformers`, e
 
 ## Notes
 
-- Embeddings run fully locally (`all-MiniLM-L6-v2`); only answer generation calls Groq.
+- Embeddings run fully locally (`all-MiniLM-L6-v2`); only answer generation calls the LLM API.
+- Default LLM is Anthropic (`claude-haiku-4-5`). Set `LLM_PROVIDER=groq` and `GROQ_API_KEY` to use Groq instead.
 - If similarity of the best retrieved chunk is below `0.25`, the app refuses with:  
   `I can only answer questions about Meridian Software company policies.`
 - Paths are resolved relative to the project root and work on macOS, Linux, and Windows.

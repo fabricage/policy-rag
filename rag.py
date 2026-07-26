@@ -13,9 +13,8 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from groq import Groq
 
-from ingest import CHROMA_DIR, COLLECTION_NAME, get_or_create_collection
+from ingest import CHROMA_DIR, get_or_create_collection
 
 # Load environment variables from .env at project root
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -26,7 +25,11 @@ load_dotenv(PROJECT_ROOT / ".env")
 # defined as (1 - cosine_similarity), so we convert distance → similarity.
 SIMILARITY_THRESHOLD = 0.25
 TOP_K = 4
-GROQ_MODEL = "llama-3.1-8b-instant"
+
+# Default generation models per provider (overridable via env)
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+
 REFUSAL_MESSAGE = (
     "I can only answer questions about Meridian Software company policies."
 )
@@ -42,19 +45,37 @@ Rules:
 """
 
 
-def _require_groq_api_key() -> str:
-    """Return the Groq API key or raise a clear setup error.
+def resolve_llm_provider() -> str:
+    """Choose which LLM provider to use for generation.
 
-    Why: failing early with instructions is better than a vague client error
-    when GROQ_API_KEY is missing from the environment / .env file.
+    Why: Anthropic is the primary option for this deployment (presentation),
+    while Groq remains available if GROQ_API_KEY is set. Explicit
+    LLM_PROVIDER=anthropic|groq overrides auto-detection.
     """
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "GROQ_API_KEY is not set. Create a .env file in the project root "
-            "with: GROQ_API_KEY=your_key_here"
-        )
-    return api_key
+    explicit = (os.getenv("LLM_PROVIDER") or "").strip().lower()
+    if explicit in {"anthropic", "groq"}:
+        return explicit
+    if os.getenv("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    if os.getenv("GROQ_API_KEY"):
+        return "groq"
+    raise RuntimeError(
+        "No LLM API key found. Create a .env file in the project root with "
+        "either:\n"
+        "  ANTHROPIC_API_KEY=your_key_here\n"
+        "or:\n"
+        "  GROQ_API_KEY=your_key_here\n"
+        "Optional: LLM_PROVIDER=anthropic|groq"
+    )
+
+
+def require_llm_configured() -> str:
+    """Validate that an LLM provider/key is available and return the name.
+
+    Why: evaluate.py and app startup can fail early with a clear setup message
+    instead of a vague client SDK error.
+    """
+    return resolve_llm_provider()
 
 
 def retrieve_chunks(question: str, k: int = TOP_K) -> list[dict[str, Any]]:
@@ -113,15 +134,21 @@ def build_context_block(chunks: list[dict[str, Any]]) -> str:
     return "\n\n---\n\n".join(blocks)
 
 
-def call_groq(question: str, context_block: str) -> str:
-    """Call Groq with the system prompt, context, and user question.
+def _call_anthropic(question: str, context_block: str) -> str:
+    """Call Anthropic Claude with the system prompt, context, and question.
 
-    Why: generation is intentionally separate from retrieval so either step
-    can be tested or swapped without rewriting the whole pipeline.
+    Why: Anthropic is used for the Render presentation deploy when
+    ANTHROPIC_API_KEY is set (Groq is optional, not required by Cursor).
     """
-    api_key = _require_groq_api_key()
-    client = Groq(api_key=api_key)
+    from anthropic import Anthropic
 
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "ANTHROPIC_API_KEY is not set. Add it to .env or the Render env vars."
+        )
+
+    client = Anthropic(api_key=api_key)
     user_content = (
         "Context:\n"
         f"{context_block}\n\n"
@@ -129,7 +156,43 @@ def call_groq(question: str, context_block: str) -> str:
         f"{question}\n\n"
         "Answer using only the context above and cite sources with the exact labels."
     )
+    response = client.messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=400,
+        temperature=0.1,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_content}],
+    )
+    parts = []
+    for block in response.content:
+        text = getattr(block, "text", None)
+        if text:
+            parts.append(text)
+    return "".join(parts).strip()
 
+
+def _call_groq(question: str, context_block: str) -> str:
+    """Call Groq with the system prompt, context, and user question.
+
+    Why: kept as an optional fallback for the original course stack when
+    GROQ_API_KEY is available.
+    """
+    from groq import Groq
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "GROQ_API_KEY is not set. Add it to .env or set LLM_PROVIDER=anthropic."
+        )
+
+    client = Groq(api_key=api_key)
+    user_content = (
+        "Context:\n"
+        f"{context_block}\n\n"
+        "Question:\n"
+        f"{question}\n\n"
+        "Answer using only the context above and cite sources with the exact labels."
+    )
     response = client.chat.completions.create(
         model=GROQ_MODEL,
         messages=[
@@ -140,6 +203,18 @@ def call_groq(question: str, context_block: str) -> str:
         max_tokens=400,
     )
     return (response.choices[0].message.content or "").strip()
+
+
+def call_llm(question: str, context_block: str) -> str:
+    """Generate an answer with the configured LLM provider.
+
+    Why: keeps provider choice in one place so the Flask app, CLI, and
+    evaluation script share the same generation path.
+    """
+    provider = resolve_llm_provider()
+    if provider == "anthropic":
+        return _call_anthropic(question, context_block)
+    return _call_groq(question, context_block)
 
 
 def extract_citations(chunks: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -190,7 +265,7 @@ def answer_question(question: str) -> dict[str, Any]:
         }
 
     context_block = build_context_block(chunks)
-    answer = call_groq(question, context_block)
+    answer = call_llm(question, context_block)
     citations = extract_citations(chunks)
     snippets = [chunk["text"] for chunk in chunks]
 

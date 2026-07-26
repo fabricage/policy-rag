@@ -273,10 +273,11 @@ def main() -> None:
     Why: Render injects PORT; locally we default to 5000. Production on
     Render uses gunicorn via render.yaml instead of this entry point.
     """
-    # Fail fast with a clear message if the key is missing when starting chat use
-    if not os.getenv("GROQ_API_KEY"):
+    # Fail fast with a clear message if no LLM key is configured
+    if not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("GROQ_API_KEY")):
         print(
-            "Warning: GROQ_API_KEY is not set. Create a .env file with "
+            "Warning: No LLM API key is set. Create a .env file with "
+            "ANTHROPIC_API_KEY=your_key_here (recommended) or "
             "GROQ_API_KEY=your_key_here before asking questions."
         )
     port = int(os.getenv("PORT", "5000"))

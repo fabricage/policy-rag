@@ -7,15 +7,22 @@ Runnable as: python evaluate.py
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import sys
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from groq import Groq
 
-from rag import REFUSAL_MESSAGE, _require_groq_api_key, answer_question
+from rag import (
+    ANTHROPIC_MODEL,
+    GROQ_MODEL,
+    REFUSAL_MESSAGE,
+    answer_question,
+    require_llm_configured,
+    resolve_llm_provider,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 EVAL_DIR = PROJECT_ROOT / "eval"
@@ -23,8 +30,6 @@ QUESTIONS_PATH = EVAL_DIR / "questions.jsonl"
 RESULTS_PATH = EVAL_DIR / "results.md"
 
 load_dotenv(PROJECT_ROOT / ".env")
-
-JUDGE_MODEL = "llama-3.1-8b-instant"
 
 
 def load_questions(path: Path = QUESTIONS_PATH) -> list[dict[str, str]]:
@@ -68,7 +73,7 @@ def citation_is_correct(expected_source: str, result: dict[str, Any]) -> bool:
 
 
 def judge_groundedness(question: str, answer: str, snippets: list[str]) -> str:
-    """Ask Groq for a strict YES/NO groundedness judgment.
+    """Ask the configured LLM for a strict YES/NO groundedness judgment.
 
     Why: LLM-as-judge estimates whether every claim in the answer is
     supported by retrieved context, catching fluent but ungrounded answers.
@@ -78,8 +83,6 @@ def judge_groundedness(question: str, answer: str, snippets: list[str]) -> str:
     if answer.strip() == REFUSAL_MESSAGE or not snippets:
         return "N"
 
-    api_key = _require_groq_api_key()
-    client = Groq(api_key=api_key)
     context = "\n\n".join(snippets)
     prompt = (
         "You are a strict factuality judge.\n"
@@ -92,13 +95,33 @@ def judge_groundedness(question: str, answer: str, snippets: list[str]) -> str:
         "Is every claim in this answer fully supported by the provided context?\n"
         "Reply with ONLY YES or NO."
     )
-    response = client.chat.completions.create(
-        model=JUDGE_MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.0,
-        max_tokens=5,
-    )
-    text = (response.choices[0].message.content or "").strip().upper()
+
+    provider = resolve_llm_provider()
+    if provider == "anthropic":
+        from anthropic import Anthropic
+
+        client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        response = client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=5,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = "".join(
+            getattr(block, "text", "") for block in response.content
+        ).strip().upper()
+    else:
+        from groq import Groq
+
+        client = Groq(api_key=os.environ["GROQ_API_KEY"])
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=5,
+        )
+        text = (response.choices[0].message.content or "").strip().upper()
+
     if text.startswith("YES"):
         return "Y"
     return "N"
@@ -244,7 +267,8 @@ def write_results_markdown(summary: dict[str, Any], path: Path = RESULTS_PATH) -
 def main() -> int:
     """Run evaluation end-to-end and write eval/results.md."""
     try:
-        _require_groq_api_key()
+        provider = require_llm_configured()
+        print(f"Using LLM provider: {provider}")
     except RuntimeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

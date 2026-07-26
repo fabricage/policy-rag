@@ -1,5 +1,5 @@
 """
-Smoke tests that do not require GROQ_API_KEY or a populated vector store.
+Smoke tests that do not require an LLM API key or a populated vector store.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ def test_health_endpoint_returns_ok():
     """Verify GET /health returns HTTP 200 and {"status": "ok"}.
 
     Why: proves the Flask routes are wired and the test client can exercise
-    the app without calling Groq or Chroma.
+    the app without calling an LLM API or Chroma.
     """
     import app as app_module
 
