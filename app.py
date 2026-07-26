@@ -268,14 +268,21 @@ def health():
 
 
 def main() -> None:
-    """Run the development server on port 5000."""
-    # Fail fast with a clear message if the key is missing when starting chat use
-    if not os.getenv("GROQ_API_KEY"):
+    """Run the development server (local) on PORT or 5000.
+
+    Why: Render injects PORT; locally we default to 5000. Production on
+    Render uses gunicorn via render.yaml instead of this entry point.
+    """
+    # Fail fast with a clear message if no LLM key is configured
+    if not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("GROQ_API_KEY")):
         print(
-            "Warning: GROQ_API_KEY is not set. Create a .env file with "
+            "Warning: No LLM API key is set. Create a .env file with "
+            "ANTHROPIC_API_KEY=your_key_here (recommended) or "
             "GROQ_API_KEY=your_key_here before asking questions."
         )
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.getenv("PORT", "5000"))
+    debug = os.getenv("FLASK_DEBUG", "1") == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)
 
 
 if __name__ == "__main__":
