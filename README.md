@@ -88,6 +88,7 @@ pytest -q
 ├── ingest.py                   # chunk, embed, store in Chroma
 ├── evaluate.py                 # citation / groundedness / latency metrics
 ├── requirements.txt
+├── render.yaml                 # Render Blueprint (web service + GROQ_API_KEY)
 ├── pytest.ini                  # adds project root to PYTHONPATH for tests
 ├── README.md
 ├── design-and-evaluation.md
@@ -100,6 +101,21 @@ pytest -q
 │   └── test_smoke.py
 └── .github/workflows/ci.yml
 ```
+
+## Deploy on Render (presentation)
+
+This repo includes a Render Blueprint at `render.yaml`.
+
+1. Merge this branch to `main` (if it is not already).
+2. Open [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.
+3. Connect the `fabricage/policy-rag` GitHub repo (branch `main`).
+4. When prompted, paste your **GROQ_API_KEY** (marked `sync: false` in the blueprint).
+5. Apply the Blueprint and wait for the first deploy.
+   - Build runs `pip install` then `python ingest.py` (embeds corpus into `chroma_db`).
+   - Start runs `gunicorn` on `$PORT` with health checks at `/health`.
+6. Open the `*.onrender.com` URL and try an example question below.
+
+If the free instance runs out of memory while loading `sentence-transformers`, edit the service plan in Render from **Free** to **Starter** and redeploy.
 
 ## Notes
 

@@ -4,3 +4,4 @@ sentence-transformers==3.*
 groq==0.*
 pytest==8.*
 python-dotenv
+gunicorn==22.*
