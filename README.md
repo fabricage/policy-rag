@@ -91,6 +91,7 @@ pytest -q
 ├── evaluate.py                 # citation / groundedness / latency metrics
 ├── requirements.txt
 ├── render.yaml                 # Render Blueprint (web service + ANTHROPIC_API_KEY)
+├── requirements-render.txt     # Slim deps for Render (no PyTorch)
 ├── pytest.ini                  # adds project root to PYTHONPATH for tests
 ├── README.md
 ├── design-and-evaluation.md
@@ -117,7 +118,7 @@ This repo includes a Render Blueprint at `render.yaml`.
    - Start runs `gunicorn` on `$PORT` with health checks at `/health`.
 6. Open the `*.onrender.com` URL and try an example question below.
 
-If the free instance runs out of memory while loading `sentence-transformers`, edit the service plan in Render from **Free** to **Starter** and redeploy.
+**Memory note:** Render Free has ~512MB RAM. PyTorch/`sentence-transformers` usually exceeds that. This Blueprint uses `requirements-render.txt` and `EMBEDDING_BACKEND=onnx` (same `all-MiniLM-L6-v2` model via ONNX, much less RAM). If you still see “exceeded its memory limit”, upgrade the service plan to **Standard** (2GB) — Starter is still 512MB and will not help.
 
 ## Notes
 

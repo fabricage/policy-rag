@@ -6,9 +6,11 @@ Runnable as: python ingest.py
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 import chromadb
 from chromadb.config import Settings
@@ -28,6 +30,10 @@ RANDOM_SEED = 42
 
 # Embedding model used for all chunk vectors
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+# Backend: "onnx" (default, low memory — required for Render free tier)
+# or "sentence_transformers" (PyTorch; heavier, matches original course stack).
+EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "onnx").strip().lower()
 
 
 def approximate_token_count(text: str) -> int:
@@ -128,15 +134,21 @@ def load_corpus_markdown(corpus_dir: Path = CORPUS_DIR) -> list[tuple[str, str]]
     return documents
 
 
-def get_embedding_function() -> embedding_functions.SentenceTransformerEmbeddingFunction:
-    """Create the shared SentenceTransformer embedding function.
+def get_embedding_function() -> Any:
+    """Create the shared embedding function for ingest and query.
 
     Why: Chroma needs a consistent embedding function at ingest and query
-    time so vectors live in the same space.
+    time so vectors live in the same space. Default is ONNX MiniLM
+    (same all-MiniLM-L6-v2 weights) because PyTorch sentence-transformers
+    exceeds Render free-tier memory (~512MB).
     """
-    return embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=EMBEDDING_MODEL
-    )
+    if EMBEDDING_BACKEND in {"sentence_transformers", "sentence-transformers", "st"}:
+        return embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=EMBEDDING_MODEL
+        )
+
+    # Default / Render path: ONNX runtime of all-MiniLM-L6-v2 (no PyTorch)
+    return embedding_functions.ONNXMiniLM_L6_V2()
 
 
 def get_or_create_collection(
@@ -235,6 +247,7 @@ def main() -> int:
     print(f"  Chunks stored:       {chunks_stored}")
     print(f"  Collection:          {COLLECTION_NAME}")
     print(f"  Persist directory:   {CHROMA_DIR}")
+    print(f"  Embedding backend:   {EMBEDDING_BACKEND}")
     return 0
 
 

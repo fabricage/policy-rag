@@ -1,0 +1,9 @@
+# Slim dependency set for Render free-tier memory limits.
+# Avoids PyTorch / sentence-transformers (often 1GB+ RAM).
+# Embeddings use chromadb's ONNX all-MiniLM-L6-v2 instead.
+flask==3.0.*
+chromadb==0.5.*
+anthropic==0.*
+groq==0.*
+python-dotenv
+gunicorn==22.*
