@@ -1,7 +1,8 @@
 # Render Blueprint for Meridian Software Policy RAG
 # Docs: https://render.com/docs/blueprint-spec
 #
-# After merging: Dashboard → New → Blueprint → connect this repo → set ANTHROPIC_API_KEY.
+# Uses a slim requirements file + ONNX embeddings so the free tier (~512MB)
+# is less likely to OOM. If it still restarts, upgrade the plan to Standard (2GB).
 
 services:
   - type: web
@@ -11,8 +12,8 @@ services:
     region: oregon
     branch: main
     autoDeployTrigger: commit
-    buildCommand: pip install -r requirements.txt && python ingest.py
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1
+    buildCommand: pip install -r requirements-render.txt && python ingest.py
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1 --max-requests 200 --max-requests-jitter 40
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -23,10 +24,18 @@ services:
         sync: false
       - key: ANTHROPIC_MODEL
         value: claude-haiku-4-5
-      # Keep CPU thread pools small on free-tier memory limits
+      - key: EMBEDDING_BACKEND
+        value: onnx
+      # Keep CPU/allocator pressure low on free-tier memory limits
       - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MKL_NUM_THREADS
+        value: "1"
+      - key: OPENBLAS_NUM_THREADS
         value: "1"
       - key: TOKENIZERS_PARALLELISM
         value: "false"
+      - key: MALLOC_ARENA_MAX
+        value: "2"
       - key: FLASK_DEBUG
         value: "0"

@@ -2,9 +2,11 @@
 
 ## Design decisions
 
-### Embedding model: `all-MiniLM-L6-v2` (sentence-transformers)
+### Embedding model: `all-MiniLM-L6-v2` (ONNX default; sentence-transformers optional)
 
-Chosen because it is free, runs locally, and produces reproducible vectors without a paid embedding API. Local embeddings keep ingest cost at zero and avoid sending the full policy corpus to a third-party embedding service. The model is small enough for a student laptop while still providing solid semantic retrieval for short policy questions.
+Chosen because it is free, runs locally, and produces reproducible vectors without a paid embedding API. Local embeddings keep ingest cost at zero and avoid sending the full policy corpus to a third-party embedding service.
+
+**Deploy note:** On Render’s free tier (~512MB), loading PyTorch via `sentence-transformers` typically OOMs. The app defaults to Chroma’s `ONNXMiniLM_L6_V2` embedding function — the same MiniLM weights through ONNX Runtime — and Render installs `requirements-render.txt` (no PyTorch). Set `EMBEDDING_BACKEND=sentence_transformers` locally if you want the original PyTorch path.
 
 ### Chunking strategy and sizes
 
