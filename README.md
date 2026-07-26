@@ -89,6 +89,9 @@ pytest -q
 ├── rag.py                      # retrieve → guardrail → LLM → citations
 ├── ingest.py                   # chunk, embed, store in Chroma
 ├── evaluate.py                 # citation / groundedness / latency metrics
+├── templates/index.html        # Semantic HTML5 chat shell
+├── static/css/app.css          # Fall-green modern UI
+├── static/js/app.js            # ES module UI + Motion.dev 12.42.2
 ├── requirements.txt
 ├── render.yaml                 # Render Blueprint (web service + ANTHROPIC_API_KEY)
 ├── requirements-render.txt     # Slim deps for Render (no PyTorch)

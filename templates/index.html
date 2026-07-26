@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#121a14" />
+  <title>Meridian — Policy Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Outfit:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <p class="brand" id="brand">Meridian</p>
+    <p class="brand-sub">Software Inc. · Policy Assistant</p>
+  </header>
+
+  <main id="main" class="shell">
+    <section class="intro" aria-labelledby="headline">
+      <h1 id="headline">Ask the company handbook.</h1>
+      <p class="lede">
+        Grounded answers from Meridian’s internal policies — with citations you can trust.
+      </p>
+    </section>
+
+    <section class="thread-section" aria-labelledby="thread-heading">
+      <h2 id="thread-heading" class="visually-hidden">Conversation</h2>
+      <div id="thread" class="thread" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <p id="empty-hint" class="empty-hint">
+        Try PTO accrual, password rules, per-diems, or remote core hours.
+      </p>
+    </section>
+
+    <section class="composer-section" aria-label="Ask a question">
+      <form id="chat-form" class="composer" autocomplete="off">
+        <label class="visually-hidden" for="question">Your policy question</label>
+        <div class="composer-row">
+          <input
+            id="question"
+            name="question"
+            type="text"
+            enterkeyhint="send"
+            placeholder="Ask about Meridian policies…"
+            required
+          />
+          <button id="ask-btn" type="submit">
+            <span class="btn-label">Ask</span>
+          </button>
+        </div>
+        <p id="status" class="status" hidden></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Answers only from indexed Meridian policy documents.</p>
+  </footer>
+
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
