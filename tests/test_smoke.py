@@ -31,6 +31,23 @@ def test_health_endpoint_returns_ok():
     assert response.get_json() == {"status": "ok"}
 
 
+def test_index_serves_modern_chat_shell():
+    """Verify GET / serves the Meridian chat page shell.
+
+    Why: catches broken template paths after moving HTML/CSS/JS into
+    templates/ and static/ for the modern UI.
+    """
+    import app as app_module
+
+    client = app_module.app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Meridian" in html
+    assert 'type="module"' in html
+    assert "motion@12.42.2" in html or "/static/js/app.js" in html
+
+
 def test_chunk_markdown_by_headings_splits_sample():
     """Verify markdown chunking splits on ## headings correctly.
 
