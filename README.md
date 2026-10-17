@@ -130,3 +130,5 @@ This repo includes a Render Blueprint at `render.yaml`.
 - If similarity of the best retrieved chunk is below `0.25`, the app refuses with:  
   `I can only answer questions about Meridian Software company policies.`
 - Paths are resolved relative to the project root and work on macOS, Linux, and Windows.
+
+Test
