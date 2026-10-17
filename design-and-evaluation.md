@@ -1,7 +1,7 @@
 # Meridian Software Policy RAG — Design & Evaluation Document
 
-Repository: **[ADD GITHUB REPO URL]**
-Deployed app (optional): **[ADD RENDER URL, or delete this line if not deployed]**
+Repository: (https://github.com/fabricage/policy-rag/)
+Deployed app (optional): (https://meridian-policy-rag.onrender.com)
 Author: Ellis Painter
 
 ---
