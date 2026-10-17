@@ -108,21 +108,6 @@ pytest -q
 └── .github/workflows/ci.yml
 ```
 
-## Deploy on Render (presentation)
-
-This repo includes a Render Blueprint at `render.yaml`.
-
-1. Merge this branch to `main` (if it is not already).
-2. Open [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.
-3. Connect the `fabricage/policy-rag` GitHub repo (branch `main`).
-4. When prompted, paste your **ANTHROPIC_API_KEY** (marked `sync: false` in the blueprint).
-5. Apply the Blueprint and wait for the first deploy.
-   - Build runs `pip install` then `python ingest.py` (embeds corpus into `chroma_db`).
-   - Start runs `gunicorn` on `$PORT` with health checks at `/health`.
-6. Open the `*.onrender.com` URL and try an example question below.
-
-**Memory note:** Render Free has ~512MB RAM. PyTorch/`sentence-transformers` usually exceeds that. This Blueprint uses `requirements-render.txt` and `EMBEDDING_BACKEND=onnx` (same `all-MiniLM-L6-v2` model via ONNX, much less RAM). If you still see “exceeded its memory limit”, upgrade the service plan to **Standard** (2GB) — Starter is still 512MB and will not help.
-
 ## Notes
 
 - Embeddings run fully locally (`all-MiniLM-L6-v2`); only answer generation calls the LLM API.
@@ -130,5 +115,3 @@ This repo includes a Render Blueprint at `render.yaml`.
 - If similarity of the best retrieved chunk is below `0.25`, the app refuses with:  
   `I can only answer questions about Meridian Software company policies.`
 - Paths are resolved relative to the project root and work on macOS, Linux, and Windows.
-
-Test
